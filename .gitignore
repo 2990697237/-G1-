@@ -52,3 +52,7 @@ onnxruntime-linux-aarch64-1.22.0/
 
 # Binary data files (optional - uncomment if data is too large)
 # motion_data/**/*.bin
+
+# Local backup files
+*.before_keyboard
+*.tgz

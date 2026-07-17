@@ -1,6 +1,9 @@
 #include "interface/IOSDK.h"
 #include <stdio.h>
 #include <iostream>
+#include <sys/select.h>
+#include <unistd.h>
+#include <cctype>
 
 uint32_t crc32_core(uint32_t *ptr, uint32_t len)
 {
@@ -51,8 +54,104 @@ IOSDK::IOSDK()
     mode_machine_ = 0;
 }
 
+
+void IOSDK::KeyboardHandler()
+{
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(STDIN_FILENO, &readfds);
+
+    timeval timeout{};
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+
+    const int ready = select(
+        STDIN_FILENO + 1,
+        &readfds,
+        nullptr,
+        nullptr,
+        &timeout
+    );
+
+    if (ready <= 0 || !FD_ISSET(STDIN_FILENO, &readfds))
+    {
+        return;
+    }
+
+    std::string line;
+    if (!std::getline(std::cin, line) || line.empty())
+    {
+        return;
+    }
+
+    const char key = static_cast<char>(
+        std::tolower(static_cast<unsigned char>(line.front()))
+    );
+
+    switch (key)
+    {
+        case 's':
+            userCmd_ = UserCommand::START;
+            std::cout << "[Keyboard] START -> FixedStand" << std::endl;
+            break;
+
+        case 'm':
+            userCmd_ = UserCommand::R2_A;
+            std::cout << "[Keyboard] R2+A -> MJAmp" << std::endl;
+            break;
+
+        case 'w':
+            userCmd_ = UserCommand::R1_UP;
+            std::cout << "[Keyboard] R1+Up -> WBC dance" << std::endl;
+            break;
+
+        case 'p':
+            userCmd_ = UserCommand::L2_B;
+            std::cout << "[Keyboard] L2+B -> Passive" << std::endl;
+            break;
+
+        case 'x':
+            userCmd_ = UserCommand::L2;
+            std::cout << "[Keyboard] L2 -> Pause now" << std::endl;
+            break;
+
+        case 'r':
+            userCmd_ = UserCommand::R1;
+            std::cout << "[Keyboard] R1 -> Resume" << std::endl;
+            break;
+
+        case 'h':
+            userCmd_ = UserCommand::R2_UP;
+            std::cout << "[Keyboard] High-speed mode" << std::endl;
+            break;
+
+        case 'l':
+            userCmd_ = UserCommand::R2_DOWN;
+            std::cout << "[Keyboard] Low-speed mode" << std::endl;
+            break;
+
+        case 'b':
+            userCmd_ = UserCommand::R2_B;
+            std::cout << "[Keyboard] Switch to Loco" << std::endl;
+            break;
+
+        case 'q':
+            userCmd_ = UserCommand::SELECT;
+            std::cout << "[Keyboard] Exit" << std::endl;
+            break;
+
+        default:
+            std::cout
+                << "[Keyboard] Unknown command. "
+                << "Use s/m/w/p/x/r/h/l/b/q"
+                << std::endl;
+            break;
+    }
+}
+
 void IOSDK::sendRecv(const LowlevelCmd *cmd, LowlevelState *state)
 {
+    KeyboardHandler();
     // send control cmd
     LowCmd_ dds_low_command;
     dds_low_command.mode_pr() = static_cast<uint8_t>(Mode::PR);

@@ -41,6 +41,7 @@ private:
     UserValue userValue_;
 
     void LowStateHandler(const void *message);
+    void KeyboardHandler();
 
 public:
     IOSDK(/* args */);
