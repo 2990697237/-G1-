@@ -13,7 +13,7 @@ FSM::FSM(CtrlComponents *ctrlComp)
     _stateList.wbc = new State_WBC(_ctrlComp);
     initialize(); 
 }
-//FSM destructor, delete all states in the state list
+//FSM destructor
 FSM::~FSM(){  
     _stateList.deletePtr();
 }
